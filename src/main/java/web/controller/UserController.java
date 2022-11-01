@@ -1,22 +1,59 @@
 package web.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
+import web.model.User;
+import web.service.UserService;
 
-import java.util.ArrayList;
-import java.util.List;
 
 @Controller
 public class UserController {
 
+    @Autowired
+    private UserService userService;
+
     @GetMapping(value = "/")
-    public String printWelcome(ModelMap model) {
-        List<String> messages = new ArrayList<>();
-        messages.add("Hello!");
-        messages.add("Spring MVC application");
-        messages.add("5.2.0 version by sep'19 ");
-        model.addAttribute("messages", messages);
+    public String getUsers(ModelMap model) {
+        model.addAttribute("user", userService.getAllUsers());
         return "index";
+    }
+
+    @RequestMapping("/new")
+    public String newUserPage(Model model) {
+        User user = new User();
+        model.addAttribute("user", user);
+
+        return "new_user";
+    }
+    @RequestMapping(value = "/save", method = RequestMethod.POST)
+    public String saveUser(@ModelAttribute("user") User user) {
+        userService.addUser(user);
+
+        return "redirect:/";
+    }
+
+    @RequestMapping("/edit/{id}")
+    public ModelAndView editUserPage(@PathVariable(name = "id") int id) {
+        ModelAndView mav = new ModelAndView("edit");
+        User user = userService.findById((long) id);
+        mav.addObject("user", user);
+
+        return mav;
+    }
+
+    @RequestMapping(value = "/update", method = RequestMethod.POST)
+    public String saveChangeUser(@ModelAttribute("user") User user) {
+        userService.updateUser(user);
+
+        return "redirect:/";
+    }
+    @RequestMapping("/delete/{id}")
+    public String deleteProduct(@PathVariable(name = "id") Long id) {
+        userService.removeUser(id);
+        return "redirect:/";
     }
 }
